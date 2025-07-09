@@ -178,11 +178,11 @@ nextflow run . -profile docker -params-file params.yaml
 # Run with Singularity on local system
 nextflow run . -profile singularity -params-file params.yaml
 
-# Run on HPC with SLURM
-nextflow run . -profile slurm -params-file params.yaml
+# Run on HPC with SLURM (from login node)
+nextflow run . -profile slurm -params-file params_hpc.yaml
 
-# Run on HPC with custom configuration
-nextflow run . -profile hpc -c conf/my_hpc.config -params-file params.yaml
+# Run on HPC with custom configuration (from login node)
+nextflow run . -profile slurm -c conf/my_hpc.config -params-file params_hpc.yaml
 
 # Test run
 nextflow run . -profile test,conda
@@ -195,14 +195,16 @@ nextflow run . -profile test_slurm
 
 For High Performance Computing systems with SLURM:
 
+**Important**: Run Nextflow from a login node - it will automatically submit individual jobs to SLURM.
+
 ### Quick HPC Setup
 ```bash
 # 1. Configure for your HPC
 cp conf/hpc_custom.config conf/my_hpc.config
 # Edit with your HPC settings (account, partitions, etc.)
 
-# 2. Submit to SLURM
-sbatch bin/run_slurm.sh
+# 2. Run from login node (NOT as a SLURM job)
+./bin/run_hpc.sh
 
 # 3. Monitor progress
 squeue -u $USER

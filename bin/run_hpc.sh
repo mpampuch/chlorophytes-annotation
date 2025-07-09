@@ -1,18 +1,8 @@
 #!/bin/bash
-#SBATCH --job-name=chlorophytes-annotation
-#SBATCH --output=logs/chlorophytes_%j.out
-#SBATCH --error=logs/chlorophytes_%j.err
-#SBATCH --time=72:00:00
-#SBATCH --nodes=1
-#SBATCH --ntasks=1
-#SBATCH --cpus-per-task=2
-#SBATCH --mem=8G
-#SBATCH --partition=normal
-#SBATCH --mail-type=BEGIN,END,FAIL
-#SBATCH --mail-user=your.email@institution.edu
 
-# Chlorophytes Genome Annotation Pipeline - SLURM Execution Script
-# This script submits the Nextflow pipeline to SLURM
+# Chlorophytes Genome Annotation Pipeline - HPC Execution Script
+# This script runs Nextflow on a login node, which then submits jobs to SLURM
+# DO NOT submit this script to SLURM - run it directly on the login node
 
 set -euo pipefail
 
@@ -21,7 +11,7 @@ set -euo pipefail
 # ==============================================
 
 # Pipeline parameters file (modify according to your data)
-PARAMS_FILE="params.yaml"
+PARAMS_FILE="params_hpc.yaml"
 
 # Nextflow work directory (use fast storage if available)
 WORK_DIR="/scratch/$USER/chlorophytes-work"
@@ -33,23 +23,27 @@ SINGULARITY_CACHE="/scratch/$USER/singularity"
 OUTDIR="results"
 
 # Maximum resources (adjust according to your HPC)
-MAX_CPUS=128
-MAX_MEMORY="500.GB"
+MAX_CPUS=256
+MAX_MEMORY="1.TB"
 MAX_TIME="72.h"
 
 # Email for notifications (optional)
 EMAIL="your.email@institution.edu"
+
+# HPC configuration file (modify as needed - use slurm.config or your custom config)
+HPC_CONFIG="conf/slurm.config"
 
 # ==============================================
 # SETUP
 # ==============================================
 
 echo "Starting Chlorophytes Annotation Pipeline at $(date)"
-echo "Job ID: $SLURM_JOB_ID"
 echo "Running on: $(hostname)"
+echo "User: $(whoami)"
 
 # Create necessary directories
 mkdir -p logs
+mkdir -p reports
 mkdir -p "$WORK_DIR"
 mkdir -p "$SINGULARITY_CACHE"
 
@@ -63,14 +57,20 @@ export NXF_WORK="$WORK_DIR"
 export SINGULARITY_CACHEDIR="$SINGULARITY_CACHE"
 export NXF_SINGULARITY_CACHEDIR="$SINGULARITY_CACHE"
 
+# Prevent local conda/python environments from interfering
+export PYTHONNOUSERSITE=1
+
 # ==============================================
 # PIPELINE EXECUTION
 # ==============================================
 
 echo "Launching Nextflow pipeline..."
+echo "Nextflow will submit individual jobs to SLURM"
+echo "Monitor with: squeue -u $(whoami)"
 
 nextflow run . \
     -profile slurm \
+    -c "$HPC_CONFIG" \
     -params-file "$PARAMS_FILE" \
     -work-dir "$WORK_DIR" \
     --outdir "$OUTDIR" \
@@ -100,9 +100,8 @@ if [ $exit_code -eq 0 ]; then
 else
     echo "❌ Pipeline failed with exit code: $exit_code"
     echo "Check the logs for more details:"
-    echo "  - SLURM output: logs/chlorophytes_${SLURM_JOB_ID}.out"
-    echo "  - SLURM error:  logs/chlorophytes_${SLURM_JOB_ID}.err"
     echo "  - Nextflow log: .nextflow.log"
+    echo "  - Individual job logs in: $WORK_DIR/*/.command.log"
 fi
 
 # Optional: Clean up work directory if pipeline succeeded and cleanup is desired

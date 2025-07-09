@@ -2,6 +2,8 @@
 
 This guide provides detailed instructions for running the Chlorophytes Genome Annotation Pipeline on High Performance Computing (HPC) systems using SLURM job scheduler and Singularity containers.
 
+**Important**: This pipeline uses Nextflow's built-in SLURM executor. You run Nextflow from a login node, and Nextflow automatically submits individual process jobs to SLURM. Do NOT submit the entire Nextflow run as a SLURM job.
+
 ## Quick Start for HPC
 
 ```bash
@@ -14,11 +16,15 @@ cp conf/hpc_custom.config conf/my_hpc.config
 # Edit conf/my_hpc.config with your HPC settings
 
 # 3. Prepare your data and parameters
-cp params.yaml my_params.yaml
+cp params_hpc.yaml my_params.yaml
 # Edit my_params.yaml with your data paths
 
-# 4. Submit to SLURM
-sbatch bin/run_slurm.sh
+# 4. Run on login node (Nextflow will submit jobs to SLURM)
+./bin/run_hpc.sh
+
+# 5. Monitor progress
+squeue -u $USER
+tail -f .nextflow.log
 ```
 
 ## HPC System Requirements
@@ -83,52 +89,77 @@ The pipeline automatically allocates resources based on computational requiremen
 | STAR | 12 | 48 GB | 12h | normal |
 | FreeBayes | 6 | 36 GB | 8h | normal |
 
-## SLURM Execution Methods
+## How Nextflow SLURM Executor Works
 
-### Method 1: Direct Execution Script
+Nextflow's SLURM executor works differently from traditional batch job submission:
 
-Use the provided SLURM submission script:
+1. **Main Process**: Nextflow runs on the login node as a lightweight coordinator
+2. **Job Submission**: Each pipeline process becomes a separate SLURM job
+3. **Dependency Management**: Nextflow handles job dependencies automatically
+4. **Resource Management**: Each process can request different resources
+
+### Method 1: Using the Provided Script (Recommended)
 
 ```bash
-# Edit bin/run_slurm.sh with your settings
-sbatch bin/run_slurm.sh
+# Edit bin/run_hpc.sh with your settings
+./bin/run_hpc.sh
 ```
 
-### Method 2: Interactive Submission
+### Method 2: Direct Command Line
 
 ```bash
-# Start interactive session
-salloc -p normal -t 4:00:00 --mem=8G
-
-# Load modules
+# Load modules on login node
 module load nextflow/22.10.1 singularity/3.8.0
 
-# Run pipeline
-nextflow run . -profile slurm -params-file params.yaml
-```
-
-### Method 3: Custom SLURM Script
-
-Create your own submission script:
-
-```bash
-#!/bin/bash
-#SBATCH --job-name=chlorophytes
-#SBATCH --account=myproject
-#SBATCH --partition=normal
-#SBATCH --time=72:00:00
-#SBATCH --cpus-per-task=2
-#SBATCH --mem=8G
-#SBATCH --mail-type=ALL
-
-module load nextflow/22.10.1 singularity/3.8.0
-
+# Run from login node (Nextflow submits jobs to SLURM)
 nextflow run . \
     -profile slurm \
-    -params-file params.yaml \
-    --max_cpus 128 \
-    --max_memory 512.GB \
+    -c conf/slurm.config \
+    -params-file params_hpc.yaml \
+    --max_cpus 256 \
+    --max_memory 1.TB \
     --max_time 72.h
+```
+
+### Method 3: Custom Configuration
+
+Create your own SLURM config:
+
+```groovy
+// my_slurm.config
+executor {
+    name = 'slurm'
+    queueSize = 100
+}
+
+process {
+    executor = 'slurm'
+    queue = 'your_partition'
+    clusterOptions = '--account=your_account'
+    
+    withLabel:big_job {
+        queue = 'bigmem'
+        cpus = 32
+        memory = '256.GB'
+        time = '48.h'
+    }
+}
+```
+
+### Method 4: Screen/Tmux Session (Long-running)
+
+For very long pipelines, run in a persistent session:
+
+```bash
+# Start screen session
+screen -S chlorophytes
+
+# Load modules and run
+module load nextflow/22.10.1 singularity/3.8.0
+./bin/run_hpc.sh
+
+# Detach: Ctrl+A, D
+# Reattach: screen -r chlorophytes
 ```
 
 ## Singularity Configuration
