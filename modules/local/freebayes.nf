@@ -2,10 +2,10 @@ process FREEBAYES {
     tag "$meta.id"
     label 'process_medium'
 
-    conda "bioconda::freebayes=1.3.4"
+    conda "bioconda::freebayes=1.3.4 bioconda::bwa=0.7.17 bioconda::samtools=1.17"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'https://depot.galaxyproject.org/singularity/freebayes:1.3.4--py39h5c33dc1_2' :
-        'biocontainers/freebayes:1.3.4--py39h5c33dc1_2' }"
+        'https://depot.galaxyproject.org/singularity/mulled-v2-ad317f19f5881324e963f6a2d464d696a2825ab6:c59b7a73c87a9fe81737d5d628e10a3b5807f453-0' :
+        'biocontainers/mulled-v2-ad317f19f5881324e963f6a2d464d696a2825ab6:c59b7a73c87a9fe81737d5d628e10a3b5807f453-0' }"
 
     input:
     tuple val(meta), path(reads)

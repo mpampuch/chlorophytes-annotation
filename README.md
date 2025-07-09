@@ -160,8 +160,11 @@ results/
 - `conda`: Use conda for dependency management
 - `docker`: Use Docker containers
 - `singularity`: Use Singularity containers
+- `slurm`: Use SLURM scheduler with Singularity (for HPC)
+- `hpc`: Optimized SLURM profile for HPC systems
 - `test`: Run with minimal test data
 - `test_full`: Run with full test dataset
+- `test_slurm`: Test profile for SLURM systems
 
 ### Example Commands
 
@@ -172,12 +175,48 @@ nextflow run . -profile conda -params-file params.yaml
 # Run with Docker
 nextflow run . -profile docker -params-file params.yaml
 
-# Run with Singularity on HPC
+# Run with Singularity on local system
 nextflow run . -profile singularity -params-file params.yaml
+
+# Run on HPC with SLURM
+nextflow run . -profile slurm -params-file params.yaml
+
+# Run on HPC with custom configuration
+nextflow run . -profile hpc -c conf/my_hpc.config -params-file params.yaml
 
 # Test run
 nextflow run . -profile test,conda
+
+# Test on SLURM system
+nextflow run . -profile test_slurm
 ```
+
+## HPC/SLURM Execution
+
+For High Performance Computing systems with SLURM:
+
+### Quick HPC Setup
+```bash
+# 1. Configure for your HPC
+cp conf/hpc_custom.config conf/my_hpc.config
+# Edit with your HPC settings (account, partitions, etc.)
+
+# 2. Submit to SLURM
+sbatch bin/run_slurm.sh
+
+# 3. Monitor progress
+squeue -u $USER
+tail -f .nextflow.log
+```
+
+### HPC Requirements
+- **CPUs**: 64-256 cores recommended
+- **Memory**: 256-512 GB RAM recommended  
+- **Storage**: 1-2 TB fast scratch space
+- **Runtime**: 24-72 hours
+- **Software**: Nextflow ≥22.10.1, Singularity ≥3.7.0
+
+For detailed HPC instructions, see [docs/HPC_USAGE.md](docs/HPC_USAGE.md)
 
 ## Dependencies
 

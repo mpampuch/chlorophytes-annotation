@@ -5,7 +5,7 @@ process VCFTOOLS {
     conda "bioconda::vcftools=0.1.17"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
         'https://depot.galaxyproject.org/singularity/vcftools:0.1.17--pl5321hdfd78af_4' :
-        'biocontainers/vcftools:0.1.17--pl5321hdfd78af_4' }"
+        'quay.io/biocontainers/vcftools:0.1.17--pl5321hdfd78af_4' }"
 
     input:
     tuple val(meta), path(vcf)
