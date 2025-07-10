@@ -1,0 +1,139 @@
+# HPC Parameters Template for Chlorophytes Annotation Pipeline
+# Copy this file and modify paths according to your HPC system and data
+
+# ==============================================
+# INPUT DATA PATHS (MODIFY THESE)
+# ==============================================
+
+# Reference genome (FASTA format)
+genome_fasta: "/project/your_project/data/genome/T_rotula_genome.fasta"
+
+# Illumina paired-end reads for variant calling
+illumina_reads: "/project/your_project/data/illumina/*_R{1,2}.fastq.gz"
+
+# Nanopore reads with 5mCG modifications
+nanopore_reads: "/project/your_project/data/nanopore/basecalled_5mCG.fastq.gz"
+
+# RNA-seq paired-end reads
+rna_reads: "/project/your_project/data/rnaseq/*_R{1,2}.fastq.gz"
+
+# Protein database (Stramenopiles proteins)
+protein_db: "/project/your_project/databases/stramenopiles_proteins.fasta"
+
+# RFAM covariance model database
+rfam_db: "/project/your_project/databases/Rfam.cm"
+
+# T. pseudonana CDS sequences for EDTA
+tpseudnana_cds: "/project/your_project/references/Thalassiosira_pseudonana_cds.fasta"
+
+# Reference genomes for phylogenomics
+reference_genomes: "/project/your_project/phylogenomics/reference_genomes.fasta"
+
+# ==============================================
+# OUTPUT AND STORAGE
+# ==============================================
+
+# Results output directory (use persistent storage)
+outdir: "/project/your_project/results/chlorophytes_annotation"
+
+# ==============================================
+# HPC RESOURCE CONFIGURATION
+# ==============================================
+
+# Maximum resources (adjust based on your HPC allocation)
+max_memory: "512.GB"
+max_cpus: 256
+max_time: "72.h"
+
+# ==============================================
+# OPTIMIZED PARAMETERS FOR HPC
+# ==============================================
+
+# Ploidy evaluation (FreeBayes + VCFtools)
+min_mapping_quality: 30
+min_base_quality: 30
+min_coverage: 4
+min_depth: 10
+min_quality: 10
+
+# RNA families prediction (Infernal)
+evalue_threshold: 0.01
+
+# Transposable elements (EDTA)
+edta_species: "others"
+
+# Segmental duplications (Asgart)
+gap_size: 3000
+min_sequence_length: 5000
+min_identity_rate: 0.9
+min_overlap: 0.1
+
+# Transcriptome assembly (STAR + Trinity)
+star_sjdboverhang: 99
+max_intron_length: 100000
+trinity_max_memory: "100G"  # Optimized for HPC
+trinity_cpu: 32            # Use more CPUs on HPC
+
+# CD-HIT-EST clustering
+cdhit_identity: 0.95
+cdhit_global: 1
+
+# TransDecoder ORF prediction
+min_protein_length: 20
+
+# DIAMOND BLAST homology search
+diamond_evalue: 1e-5
+diamond_max_target_seqs: 1
+
+# Gene annotation (Braker2 + MAKER2)
+braker_species: "generic"
+maker_cpus: 24             # Increased for HPC
+
+# BUSCO quality assessment
+busco_lineage_eukaryota: "eukaryota_odb10"
+busco_lineage_stramenopiles: "stramenopiles_odb10"
+busco_mode: "genome"
+
+# Functional annotation (PANNZER2)
+pannzer_min_query_coverage: 0.4
+pannzer_min_subject_coverage: 0.4
+pannzer_min_alignment_length: 50
+
+# KEGG annotation (KAAS)
+kaas_organisms: "cre,bmi,pti,fcy,tps,ath,olu,mpu"
+
+# Nanopore methylation analysis
+minimap_preset: "map-ont"
+modkit_percentile: 10
+modkit_min_coverage: 1
+
+# Phylogenomics (RAxML-NG)
+raxmlng_model: "LG+G4"
+raxmlng_bootstrap: 100
+
+# ==============================================
+# HPC SYSTEM SPECIFIC (modify for your HPC)
+# ==============================================
+
+# SLURM account/project (uncomment and set if required)
+# hpc_account: "your_project_account"
+
+# Partition names (modify according to your HPC)
+# hpc_partition_normal: "compute"
+# hpc_partition_highmem: "bigmem"
+# hpc_partition_long: "long"
+
+# Modules to load (uncomment and modify as needed)
+# hpc_modules: "nextflow/22.10.1,singularity/3.8.0"
+
+# Storage paths
+# scratch_dir: "/scratch/$USER"
+# singularity_cache_dir: "/project/your_project/singularity"
+
+# ==============================================
+# NOTIFICATION SETTINGS
+# ==============================================
+
+# Email for job notifications (optional)
+email: "your.email@institution.edu"
+email_on_fail: "your.email@institution.edu"
